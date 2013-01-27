@@ -78,6 +78,10 @@ ifeq ($(CONFIG_ARCH_SHMOBILE),y)
 OBJS		+= head-shmobile.o
 endif
 
+ifeq ($(CONFIG_ARCH_WEMS_ASD01),y)
+OBJS		+= head-wems_asd01.o
+endif
+
 #
 # We now have a PIC decompressor implementation.  Decompressors running
 # from RAM should not define ZTEXTADDR.  Decompressors running directly

@@ -25,6 +25,7 @@ obj-$(CONFIG_MACH_APF9328) += mach-apf9328.o
 
 # i.MX21 based machines
 obj-$(CONFIG_MACH_MX21ADS) += mach-mx21ads.o
+obj-$(CONFIG_MACH_WEMS_ASD01) += mach-wems_asd01.o
 
 # i.MX25 based machines
 obj-$(CONFIG_MACH_MX25_3DS) += mach-mx25_3ds.o
