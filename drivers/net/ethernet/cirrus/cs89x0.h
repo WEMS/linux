@@ -324,16 +324,28 @@
 #define RAM_SIZE	0x1000       /*  The card has 4k bytes or RAM */
 #define PKT_START PP_TxFrame  /*  Start of packet RAM */
 
+#ifdef CONFIG_MACH_WEMS_ASD01
+/* ASD01 uses A1-A4 instead of expected A0-A3
+ * so we need to shift the port addresses
+ */
+#define RX_FRAME_PORT	0x0000 * 0x02
+#define TX_CMD_PORT		0x0004 * 0x02
+#define TX_LEN_PORT		0x0006 * 0x02
+#define ISQ_PORT		0x0008 * 0x02
+#define ADD_PORT		0x000A * 0x02
+#define DATA_PORT		0x000C * 0x02
+#else
 #define RX_FRAME_PORT	0x0000
-#define TX_FRAME_PORT RX_FRAME_PORT
 #define TX_CMD_PORT	0x0004
-#define TX_NOW		0x0000       /*  Tx packet after   5 bytes copied */
-#define TX_AFTER_381	0x0040       /*  Tx packet after 381 bytes copied */
-#define TX_AFTER_ALL	0x00c0       /*  Tx packet after all bytes copied */
 #define TX_LEN_PORT	0x0006
 #define ISQ_PORT	0x0008
 #define ADD_PORT	0x000A
 #define DATA_PORT	0x000C
+#endif /* CONFIG_MACH_ASD01_WEMS */
+#define TX_FRAME_PORT RX_FRAME_PORT
+#define TX_NOW		0x0000       /*  Tx packet after   5 bytes copied */
+#define TX_AFTER_381	0x0040       /*  Tx packet after 381 bytes copied */
+#define TX_AFTER_ALL	0x00c0       /*  Tx packet after all bytes copied */
 
 #define EEPROM_WRITE_EN		0x00F0
 #define EEPROM_WRITE_DIS	0x0000

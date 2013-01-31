@@ -43,6 +43,13 @@
 #define WEMS_ASD01_SD1_WP		(GPIO_PORTD | GPIO_GPIO | GPIO_IN | 26)
 #define WEMS_ASD01_SD1_CD		(GPIO_PORTD | GPIO_GPIO | GPIO_IN | 25)
 
+#define WEMS_ASD01_MMIO_BASE_ADDR   0xf5000000
+#define WEMS_ASD01_MMIO_SIZE        0x20
+
+#define WEMS_ASD01_CS5_VIRT 0xec000000
+#define WEMS_ASD01_CS5_SIZE 0x01000000
+#define WEMS_ASD01_CS5_PHYS 0xd3000000
+
     /*DR(3) &= ~(1 << 27); Turn off MMC_VEN */
 
 static const int wems_asd01_pins[] __initconst = {
@@ -104,12 +111,23 @@ static const int wems_asd01_pins[] __initconst = {
 
 
 /* Ethernet: CS8900@0xd3000000 (CS5) */
-#define WEMS_ASD01_CS8900A_MMIO_SIZE	SZ_2M
+#define WEMS_ASD01_CS8900A_MMIO_SIZE	0x200000
 #define WEMS_ASD01_CS8900A_IRQ_GPIO		IMX_GPIO_NR(5, 2)
 
 static struct resource wems_asd01_cs8900_resources[] __initdata = {
-	DEFINE_RES_MEM(MX21_CS5_BASE_ADDR, WEMS_ASD01_CS8900A_MMIO_SIZE),
-	DEFINE_RES_IRQ(-1),
+		[0] = {
+				.start = MX21_CS5_BASE_ADDR,
+				.end = MX21_CS5_BASE_ADDR + 0x00001000 -1,
+				.flags = IORESOURCE_MEM,
+		},
+		[1] = {
+				.start = WEMS_ASD01_CS8900A_IRQ_GPIO,
+				.end = WEMS_ASD01_CS8900A_IRQ_GPIO,
+				.flags = IORESOURCE_IRQ,
+		},
+		/*
+	DEFINE_RES_MEM(MX21_CS5_BASE_ADDR, 0x01000000),
+	DEFINE_RES_IRQ(-1), */
 };
 
 static const struct platform_device_info wems_asd01_cs8900_devinfo __initconst = {
@@ -201,6 +219,33 @@ static const struct imxmmc_platform_data wems_asd01_sd1_pdata __initconst = {
 };
 
 
+static struct map_desc wems_asd01_io_desc[] __initdata = {
+	/*
+	 * Memory-mapped I/O:
+	 *   - CS8900A Ethernet controller
+	 
+	{
+		.virtual = WEMS_ASD01_MMIO_BASE_ADDR,
+		.pfn = __phys_to_pfn(MX21_CS5_BASE_ADDR),
+		.length = WEMS_ASD01_MMIO_SIZE,
+		.type = MT_DEVICE,
+	},
+	*/
+	{
+		.virtual = WEMS_ASD01_CS5_VIRT,
+		.pfn = __phys_to_pfn(MX21_CS5_BASE_ADDR),
+		.length = WEMS_ASD01_CS5_SIZE,
+		.type = MT_DEVICE,
+	},
+};
+
+static void __init wems_asd01_map_io(void)
+{
+	mx21_map_io();
+	iotable_init(wems_asd01_io_desc, ARRAY_SIZE(wems_asd01_io_desc));
+}
+
+
 /* Inititalise Function */
 static void __init wems_asd01_board_init(void)
 {
@@ -209,7 +254,7 @@ static void __init wems_asd01_board_init(void)
 	mxc_gpio_setup_multiple_pins(wems_asd01_pins, ARRAY_SIZE(wems_asd01_pins),"wems_asd01");
 
 	wems_asd01_cs8900_resources[1].start	= gpio_to_irq(WEMS_ASD01_CS8900A_IRQ_GPIO);
-	wems_asd01_cs8900_resources[1].end		= gpio_to_irq(WEMS_ASD01_CS8900A_IRQ_GPIO);
+	wems_asd01_cs8900_resources[1].end	= gpio_to_irq(WEMS_ASD01_CS8900A_IRQ_GPIO);
 	platform_device_register_full(&wems_asd01_cs8900_devinfo);
 
 	imx21_add_imx_uart0(&uart_pdata_norts);
@@ -233,6 +278,7 @@ static struct sys_timer wems_asd01_timer = {
 
 MACHINE_START(WEMS_ASD01, "ASD01 WEMSprogrammer")
 	.atag_offset = 0x100,
+	.map_io = wems_asd01_map_io,
 	.init_early = imx21_init_early,
 	.init_irq = mx21_init_irq,
 	.handle_irq = imx21_handle_irq,

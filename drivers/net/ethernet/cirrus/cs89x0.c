@@ -1500,6 +1500,20 @@ cs89x0_probe1(struct net_device *dev, void __iomem *ioaddr, int modular)
 		    (EEPROM_OK | EEPROM_PRESENT))
 			pr_warn("Extended EEPROM checksum bad and no Cirrus EEPROM, relying on command line\n");
 
+#ifdef CONFIG_MACH_WEMS_ASD01
+			/* Add machine specific configuration for WEMS ASD01 */
+			pr_warn("ASD01 MAC already set by bootloader, reading back into eth device...\n");
+			for (i = 0; i < ETH_ALEN; i+=2) {
+			    u16 val;
+			    val = readreg(dev, PP_IA+i);
+			    dev->dev_addr[i] = val & 0xff;
+			    dev->dev_addr[i+1] = (val >> 8) & 0xff;
+			}
+			pr_warn("ASD01 needs to explicitly set media type to RJ45...");
+			lp->adapter_cnf |= A_CNF_10B_T;
+			lp->adapter_cnf |= A_CNF_MEDIA_10B_T;
+			lp->force |= FORCE_FULL;
+#endif
 	} else {
 		/* This reads an extended EEPROM that is not documented
 		 * in the CS8900 datasheet.
