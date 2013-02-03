@@ -176,10 +176,26 @@ int __init mx21_clocks_init(unsigned long lref, unsigned long href)
 	clk_register_clkdev(clk[csi_hclk_gate], "csi", NULL);
 	clk_register_clkdev(clk[ssi1_gate], "ssi1", NULL);
 	clk_register_clkdev(clk[ssi2_gate], "ssi2", NULL);
-	clk_register_clkdev(clk[sdhc1_ipg_gate], "sdhc1", NULL);
-	clk_register_clkdev(clk[sdhc2_ipg_gate], "sdhc2", NULL);
+	clk_register_clkdev(clk[sdhc1_ipg_gate], "ipg", "mxc-mmc.0");
+	clk_register_clkdev(clk[sdhc2_ipg_gate], "ipg", "mxc-mmc.1");
+        clk_register_clkdev(clk[per2], "per", "mxc-mmc.0");
+        clk_register_clkdev(clk[per2], "per", "mxc-mmc.1");
 
 	mxc_timer_init(MX21_IO_ADDRESS(MX21_GPT1_BASE_ADDR), MX21_INT_GPT1);
+
+	/* DEBUG: Print current values of clock registers */
+	printk("CSCR: 0x%08x\n",readl(CCM_CSCR));
+	printk("MPCTL0: 0x%08x\n",readl(CCM_MPCTL0));
+	printk("MPCTL1: 0x%08x\n",readl(CCM_MPCTL1));
+	printk("SPCTL0: 0x%08x\n",readl(CCM_SPCTL0));
+	printk("SPCTL1: 0x%08x\n",readl(CCM_SPCTL1));
+	printk("OSC26MCTL: 0x%08x\n",readl(CCM_OSC26MCTL));
+	printk("PCDR0: 0x%08x\n",readl(CCM_PCDR0));
+	printk("PCDR1: 0x%08x\n",readl(CCM_PCDR1));
+	printk("PCCR0: 0x%08x\n",readl(CCM_PCCR0));
+	printk("PCCR1: 0x%08x\n",readl(CCM_PCCR1));
+	printk("CCSR: 0x%08x\n",readl(CCM_CSCR));
+	printk("WKGDCTL: 0x%08x\n",readl(CCM_WKGDCTL));
 
 	return 0;
 }
