@@ -29,7 +29,7 @@
 
 /* Map Additional IO for RS232 Signalling */
 /* TODO: Need to correctly define some of these as out pins TBC */
-#define WEMS_ASD01_UART2_DCD	PB19_PF_CSI_D7
+#define WEMS_ASD01_UART2_DCD	(GPIO_PORTB | GPIO_GPIO | GPIO_IN | 19)
 #define WEMS_ASD01_UART2_RI		PB18_PF_CSI_D6
 #define WEMS_ASD01_UART2_DSR	PB17_PF_CSI_D5
 #define WEMS_ASD01_UART2_DTR	PB14_PF_CSI_D4
@@ -39,16 +39,45 @@
 #define WEMS_ASD01_UART3_DSR	PB11_PF_CSI_D1
 #define WEMS_ASD01_UART3_DTR	PB10_PF_CSI_D0
 
+/* Map Additional IO for SD */
 #define WEMS_ASD01_SD1_VEN		(GPIO_PORTD | GPIO_GPIO | GPIO_OUT | 27)
 #define WEMS_ASD01_SD1_WP		(GPIO_PORTD | GPIO_GPIO | GPIO_IN | 26)
 #define WEMS_ASD01_SD1_CD		(GPIO_PORTD | GPIO_GPIO | GPIO_IN | 25)
 
+/* Map Additional IO for USB */
+#define WEMS_ASD01_USB1_MODE		(GPIO_PORTC | GPIO_GPIO | GPIO_OUT | 6)
+#define WEMS_ASD01_USB1_SUSPEND		(GPIO_PORTC | 7)
+#define WEMS_ASD01_USB1_FS			(GPIO_PORTC | 8)
+#define WEMS_ASD01_USB1_OE			(GPIO_PORTC | 9)
+#define WEMS_ASD01_USB1_TXDM		(GPIO_PORTC | 10)
+#define WEMS_ASD01_USB1_TXDP		(GPIO_PORTC | 11)
+#define WEMS_ASD01_USB1_RXDM		(GPIO_PORTC | 12)
+#define WEMS_ASD01_USB1_RXDP		(GPIO_PORTC | 13)
+
+#define WEMS_ASD01_USBH_MODE		(GPIO_PORTB | GPIO_GPIO | GPIO_OUT | 22)
+#define WEMS_ASD01_USBH_SUSPEND		(GPIO_PORTB | 25)
+#define WEMS_ASD01_USBH_FS			(GPIO_PORTB | 26)
+#define WEMS_ASD01_USBH_OE			(GPIO_PORTB | 27)
+#define WEMS_ASD01_USBH_TXDM		(GPIO_PORTB | 28)
+#define WEMS_ASD01_USBH_TXDP		(GPIO_PORTB | 29)
+#define WEMS_ASD01_USBH_RXDM		(GPIO_PORTB | 30)
+#define WEMS_ASD01_USBH_RXDP		(GPIO_PORTB | 31)
+
+#define GPIO_GIUS					(1 << 20)
+
+#define WEMS_ASD01_USBH1_MODE		(GPIO_PORTB | GPIO_GPIO | GPIO_OUT | 21)
+#define WEMS_ASD01_USBH1_FS			(GPIO_PORTD | GPIO_AIN | GPIO_OUT | GPIO_GIUS | 21)
+#define WEMS_ASD01_USBH1_OE			(GPIO_PORTD | GPIO_AIN | GPIO_OUT | GPIO_GIUS | 22)
+#define WEMS_ASD01_USBH1_TXDM		(GPIO_PORTD | GPIO_AIN | GPIO_OUT | GPIO_GIUS | 23)
+#define WEMS_ASD01_USBH1_TXDP		(GPIO_PORTD | GPIO_AIN | GPIO_OUT | GPIO_GIUS | 24)
+#define WEMS_ASD01_USBH1_RXDM		(GPIO_PORTD | GPIO_AOUT | GPIO_IN | GPIO_GIUS | 19)
+#define WEMS_ASD01_USBH1_RXDP		(GPIO_PORTD | GPIO_AOUT | GPIO_IN | GPIO_GIUS | 20)
+
+/* Register Definitions for enabling USB clock */
+
+
 #define WEMS_ASD01_MMIO_BASE_ADDR   0xf5000000
 #define WEMS_ASD01_MMIO_SIZE        0x20
-
-#define WEMS_ASD01_CS5_VIRT 0xec000000
-#define WEMS_ASD01_CS5_SIZE 0x01000000
-#define WEMS_ASD01_CS5_PHYS 0xd3000000
 
     /*DR(3) &= ~(1 << 27); Turn off MMC_VEN */
 
@@ -107,6 +136,36 @@ static const int wems_asd01_pins[] __initconst = {
 	PC15_PF_TIN,
 	PC16_PF_SAP_FS,
 	PC17_PF_SAP_RXD,
+
+	/* USB Host Port 1-1 (USBD) */
+	WEMS_ASD01_USB1_MODE,
+	WEMS_ASD01_USB1_SUSPEND,
+	WEMS_ASD01_USB1_FS,
+	WEMS_ASD01_USB1_OE,
+	WEMS_ASD01_USB1_TXDM,
+	WEMS_ASD01_USB1_TXDP,
+	WEMS_ASD01_USB1_RXDM,
+	WEMS_ASD01_USB1_RXDP,
+
+	/* USB Host Port 1-2 (USBH) */
+	WEMS_ASD01_USBH_MODE,
+	WEMS_ASD01_USBH_SUSPEND,
+	WEMS_ASD01_USBH_FS,
+	WEMS_ASD01_USBH_OE,
+	WEMS_ASD01_USBH_TXDM,
+	WEMS_ASD01_USBH_TXDP,
+	WEMS_ASD01_USBH_RXDM,
+	WEMS_ASD01_USBH_RXDP,
+
+	/* USB Host Port 1-3 (USBH1) */
+	WEMS_ASD01_USBH1_MODE,
+	WEMS_ASD01_USBH1_FS,
+	WEMS_ASD01_USBH1_OE,
+	WEMS_ASD01_USBH1_TXDM,
+	WEMS_ASD01_USBH1_TXDP,
+	WEMS_ASD01_USBH1_RXDM,
+	WEMS_ASD01_USBH1_RXDP,
+
 };
 
 
@@ -206,6 +265,12 @@ static const struct imxmmc_platform_data wems_asd01_sd1_pdata __initconst = {
 	.setpower	= wems_asd01_sd1_setpower,
 };
 
+/* USB */
+static const struct mx21_usbh_platform_data wems_asd01_usbh_pdata __initconst = {
+	.host_xcvr	= MX21_USBXCVR_TXDIF_RXDIF,
+};
+
+
 /* Inititalise Function */
 static void __init wems_asd01_board_init(void)
 {
@@ -222,7 +287,8 @@ static void __init wems_asd01_board_init(void)
 	imx21_add_imx_uart2(&uart_pdata_rts);
 
 	imx21_add_mxc_mmc(0,&wems_asd01_sd1_pdata);
-	/*imx21_add_mxc_mmc(1);*/
+
+	imx21_add_imx21_hcd(&wems_asd01_usbh_pdata);
 
 	platform_add_devices(platform_devices, ARRAY_SIZE(platform_devices));
 }
