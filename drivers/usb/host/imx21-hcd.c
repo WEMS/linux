@@ -1828,6 +1828,7 @@ static int imx21_probe(struct platform_device *pdev)
 	struct usb_hcd *hcd;
 	struct imx21 *imx21;
 	struct resource *res;
+	struct clk *perclk;
 	int ret;
 	int irq;
 
@@ -1874,8 +1875,24 @@ static int imx21_probe(struct platform_device *pdev)
 		goto failed_ioremap;
 	}
 
-	/* Enable clocks source */
-	imx21->clk = clk_get(imx21->dev, NULL);
+	/* Enable OTG Clock 'per' */
+	perclk = clk_get(imx21->dev, "per");
+	if (IS_ERR(perclk)) {
+		dev_err(imx21->dev, "no per clock found\n");
+		ret = PTR_ERR(perclk);
+		goto failed_clock_get;
+	}
+
+	ret = clk_set_rate(perclk, clk_round_rate(perclk, 48000000));
+	if (ret)
+		goto failed_clock_set;
+
+	ret = clk_prepare_enable(perclk);
+	if (ret)
+		goto failed_clock_enable;
+
+	/* Enable clocks source 'ahb' */
+	imx21->clk = clk_get(imx21->dev, "ahb");
 	if (IS_ERR(imx21->clk)) {
 		dev_err(imx21->dev, "no clock found\n");
 		ret = PTR_ERR(imx21->clk);
@@ -1885,6 +1902,7 @@ static int imx21_probe(struct platform_device *pdev)
 	ret = clk_set_rate(imx21->clk, clk_round_rate(imx21->clk, 48000000));
 	if (ret)
 		goto failed_clock_set;
+
 	ret = clk_prepare_enable(imx21->clk);
 	if (ret)
 		goto failed_clock_enable;
