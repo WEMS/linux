@@ -152,6 +152,7 @@ config MACH_WEMS_ASD01
 	select IMX_HAVE_PLATFORM_MXC_MMC
 	select IMX_HAVE_PLATFORM_MXC_NAND
 	select IMX_HAVE_PLATFORM_IMX2_WDT
+	select IMX_HAVE_PLATFORM_IMX21_HCD
 	select SOC_IMX21
 	help
 	  Include support for the ASD01 WEMSprogrammer
