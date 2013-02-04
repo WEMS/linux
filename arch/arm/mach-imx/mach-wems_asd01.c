@@ -73,8 +73,7 @@
 #define WEMS_ASD01_USBH1_RXDM		(GPIO_PORTD | GPIO_AOUT | GPIO_IN | GPIO_GIUS | 19)
 #define WEMS_ASD01_USBH1_RXDP		(GPIO_PORTD | GPIO_AOUT | GPIO_IN | GPIO_GIUS | 20)
 
-/* Register Definitions for enabling USB clock */
-
+#define WEMS_ASD01_I2C_INT		(GPIO_PORTE | GPIO_GPIO | GPIO_IN | 0)
 
 #define WEMS_ASD01_MMIO_BASE_ADDR   0xf5000000
 #define WEMS_ASD01_MMIO_SIZE        0x20
@@ -166,6 +165,12 @@ static const int wems_asd01_pins[] __initconst = {
 	WEMS_ASD01_USBH1_RXDM,
 	WEMS_ASD01_USBH1_RXDP,
 
+
+	/* I2C */
+	PD17_PF_I2C_DATA,
+	PD18_PF_I2C_CLK,
+	WEMS_ASD01_I2C_INT, /* I2C INT */
+
 };
 
 
@@ -221,6 +226,7 @@ static struct platform_device *platform_devices[] __initdata = {
 	&wems_asd01_mtd_device,
 };
 
+
 /*
  * UART2 and UART3 Use RTS/CTS, UART1 does not
  */
@@ -230,6 +236,7 @@ static const struct imxuart_platform_data uart_pdata_rts __initconst = {
 
 static const struct imxuart_platform_data uart_pdata_norts __initconst = {
 };
+
 
 /* SD Slot 1 */
 static int wems_asd01_sd1_get_ro(struct device *dev)
@@ -265,9 +272,16 @@ static const struct imxmmc_platform_data wems_asd01_sd1_pdata __initconst = {
 	.setpower	= wems_asd01_sd1_setpower,
 };
 
+
 /* USB */
 static const struct mx21_usbh_platform_data wems_asd01_usbh_pdata __initconst = {
 	.host_xcvr	= MX21_USBXCVR_TXDIF_RXDIF,
+};
+
+
+/* I2C */
+static const struct imxi2c_platform_data wems_asd01_i2c_pdata __initconst = {
+	.bitrate = 100000,
 };
 
 
@@ -289,6 +303,8 @@ static void __init wems_asd01_board_init(void)
 	imx21_add_mxc_mmc(0,&wems_asd01_sd1_pdata);
 
 	imx21_add_imx21_hcd(&wems_asd01_usbh_pdata);
+
+	imx21_add_imx_i2c(&wems_asd01_i2c_pdata);
 
 	platform_add_devices(platform_devices, ARRAY_SIZE(platform_devices));
 }
