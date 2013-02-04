@@ -272,6 +272,11 @@ static const struct imxmmc_platform_data wems_asd01_sd1_pdata __initconst = {
 	.setpower	= wems_asd01_sd1_setpower,
 };
 
+/* SD Slot 2 */
+static const struct imxmmc_platform_data wems_asd01_sd2_pdata __initconst = {
+
+};
+
 
 /* USB */
 static const struct mx21_usbh_platform_data wems_asd01_usbh_pdata __initconst = {
@@ -282,6 +287,14 @@ static const struct mx21_usbh_platform_data wems_asd01_usbh_pdata __initconst = 
 /* I2C */
 static const struct imxi2c_platform_data wems_asd01_i2c_pdata __initconst = {
 	.bitrate = 100000,
+};
+
+
+/* I2C RTC */
+static struct i2c_board_info m41t00_i2c_board_info[] = {
+	{
+		I2C_BOARD_INFO("m41t00", 0x68),
+	},
 };
 
 
@@ -301,10 +314,13 @@ static void __init wems_asd01_board_init(void)
 	imx21_add_imx_uart2(&uart_pdata_rts);
 
 	imx21_add_mxc_mmc(0,&wems_asd01_sd1_pdata);
+	imx21_add_mxc_mmc(1,&wems_asd01_sd2_pdata);
 
 	imx21_add_imx21_hcd(&wems_asd01_usbh_pdata);
 
 	imx21_add_imx_i2c(&wems_asd01_i2c_pdata);
+
+	i2c_register_board_info(0, m41t00_i2c_board_info, ARRAY_SIZE(m41t00_i2c_board_info));
 
 	platform_add_devices(platform_devices, ARRAY_SIZE(platform_devices));
 }
