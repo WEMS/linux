@@ -111,7 +111,6 @@ static const int wems_asd01_pins[] __initconst = {
 	WEMS_ASD01_SD1_WP,
 	WEMS_ASD01_SD1_CD,
 
-
 	/* Micro SD - SD2 */
 	PB4_PF_SD2_D0,
 	PB5_PF_SD2_D1,
@@ -258,7 +257,6 @@ static void wems_asd01_sd1_exit(struct device *dev, void *data)
 static void wems_asd01_sd1_setpower(struct device *dev, unsigned int vdd)
 {
     if (vdd) {
-    	printk("wems_asd01_sd1_setpower(%d)\n",vdd);
     	gpio_set_value(IMX_GPIO_NR(4, 27), 1); /* Set SD_VEN high */
     } else {
     	gpio_set_value(IMX_GPIO_NR(4, 27), 0); /* Set SD_VEN low */
@@ -274,7 +272,7 @@ static const struct imxmmc_platform_data wems_asd01_sd1_pdata __initconst = {
 
 /* SD Slot 2 */
 static const struct imxmmc_platform_data wems_asd01_sd2_pdata __initconst = {
-
+	.dat3_card_detect = 1,
 };
 
 
@@ -324,7 +322,7 @@ static void __init wems_asd01_board_init(void)
 	gpio_set_value(IMX_GPIO_NR(4, 27), 0);
 	/* Initialise MMC */
 	imx21_add_mxc_mmc(0,&wems_asd01_sd1_pdata);
-	imx21_add_mxc_mmc(1,&wems_asd01_sd2_pdata);
+	/*imx21_add_mxc_mmc(1,&wems_asd01_sd2_pdata);*/
 
 	/* Test - Set Host xcvr intodiff mode */
 	gpio_set_value(IMX_GPIO_NR(3, 6),1);
