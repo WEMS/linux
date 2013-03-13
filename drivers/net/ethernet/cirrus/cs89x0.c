@@ -1509,10 +1509,14 @@ cs89x0_probe1(struct net_device *dev, void __iomem *ioaddr, int modular)
 			    dev->dev_addr[i] = val & 0xff;
 			    dev->dev_addr[i+1] = (val >> 8) & 0xff;
 			}
-			pr_warn("ASD01 needs to explicitly set media type to RJ45...");
-			lp->adapter_cnf |= A_CNF_10B_T;
-			lp->adapter_cnf |= A_CNF_MEDIA_10B_T;
+			pr_warn("ASD01 set media type to RJ45...\n");
+			lp->adapter_cnf |=  A_CNF_10B_T | A_CNF_MEDIA_10B_T;
+			pr_warn("ASD01 set full duplex...\n");
 			lp->force |= FORCE_FULL;
+			pr_warn("ASD01 set extended range...\n");
+			lp->adapter_cnf |= A_CNF_EXTND_10B_2 | A_CNF_LOW_RX_SQUELCH;
+			pr_warn("ASD01 ignore missing cable...\n");
+			lp->auto_neg_cnf |= IMM_BIT;
 #endif
 	} else {
 		/* This reads an extended EEPROM that is not documented
