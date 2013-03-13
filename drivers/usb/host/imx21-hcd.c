@@ -1883,9 +1883,12 @@ static int imx21_probe(struct platform_device *pdev)
 		goto failed_clock_get;
 	}
 
-	ret = clk_set_rate(perclk, clk_round_rate(perclk, 48000000));
+	/* Disable calls to clk_set_rate - this messes with the
+	 * system bus speed and is already set to 48M by bootloader
+	 */
+	/*ret = clk_set_rate(perclk, clk_round_rate(perclk, 48000000));
 	if (ret)
-		goto failed_clock_set;
+		goto failed_clock_set;*/
 
 	ret = clk_prepare_enable(perclk);
 	if (ret)
@@ -1899,9 +1902,12 @@ static int imx21_probe(struct platform_device *pdev)
 		goto failed_clock_get;
 	}
 
-	ret = clk_set_rate(imx21->clk, clk_round_rate(imx21->clk, 48000000));
+	/* Disable calls to clk_set_rate - this messes with the
+	 * system bus speed and is already set to 48M by bootloader
+	 */
+	/*ret = clk_set_rate(imx21->clk, clk_round_rate(imx21->clk, 48000000));
 	if (ret)
-		goto failed_clock_set;
+		goto failed_clock_set;*/
 
 	ret = clk_prepare_enable(imx21->clk);
 	if (ret)

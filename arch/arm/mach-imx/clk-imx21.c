@@ -178,10 +178,20 @@ int __init mx21_clocks_init(unsigned long lref, unsigned long href)
 	clk_register_clkdev(clk[ssi2_gate], "ssi2", NULL);
 	clk_register_clkdev(clk[sdhc1_ipg_gate], "ipg", "mxc-mmc.0");
 	clk_register_clkdev(clk[sdhc2_ipg_gate], "ipg", "mxc-mmc.1");
-        clk_register_clkdev(clk[per2], "per", "mxc-mmc.0");
-        clk_register_clkdev(clk[per2], "per", "mxc-mmc.1");
+	clk_register_clkdev(clk[per2], "per", "mxc-mmc.0");
+	clk_register_clkdev(clk[per2], "per", "mxc-mmc.1");
+	clk_register_clkdev(clk[hclk], "per", "imx21-hclk");
 
 	mxc_timer_init(MX21_IO_ADDRESS(MX21_GPT1_BASE_ADDR), MX21_INT_GPT1);
+
+	/* Get HCLK and set to 133MHz */
+	struct clk *clk_hclk;
+	clk_hclk = clk_get_sys("imx21-hclk","per");
+	printk("hclk = %lu\n",clk_get_rate(clk_hclk));
+
+	/* Max Power - Override the system bus to 133MHz, woah there! */
+	//__raw_writel(0x17030603,CCM_CSCR);
+	//printk("hclk = %lu\n",clk_get_rate(clk_hclk));
 
 	/* DEBUG: Print current values of clock registers */
 	printk("CSCR: 0x%08x\n",readl(CCM_CSCR));
@@ -194,7 +204,7 @@ int __init mx21_clocks_init(unsigned long lref, unsigned long href)
 	printk("PCDR1: 0x%08x\n",readl(CCM_PCDR1));
 	printk("PCCR0: 0x%08x\n",readl(CCM_PCCR0));
 	printk("PCCR1: 0x%08x\n",readl(CCM_PCCR1));
-	printk("CCSR: 0x%08x\n",readl(CCM_CSCR));
+	printk("CCSR: 0x%08x\n",readl(CCM_CCSR));
 	printk("WKGDCTL: 0x%08x\n",readl(CCM_WKGDCTL));
 
 	return 0;
