@@ -1511,8 +1511,8 @@ cs89x0_probe1(struct net_device *dev, void __iomem *ioaddr, int modular)
 			}
 			pr_warn("ASD01 set media type to RJ45...\n");
 			lp->adapter_cnf |=  A_CNF_10B_T | A_CNF_MEDIA_10B_T;
-			pr_warn("ASD01 set full duplex...\n");
-			lp->force |= FORCE_FULL;
+			pr_warn("ASD01 set half duplex...\n");
+			lp->force |= FORCE_HALF;
 			pr_warn("ASD01 set extended range...\n");
 			lp->adapter_cnf |= A_CNF_EXTND_10B_2 | A_CNF_LOW_RX_SQUELCH;
 			pr_warn("ASD01 ignore missing cable...\n");
