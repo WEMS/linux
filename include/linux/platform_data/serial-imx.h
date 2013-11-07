@@ -1,6 +1,9 @@
 /*
  * Copyright (C) 2008 by Sascha Hauer <kernel@pengutronix.de>
  *
+ * Copyright (c) 2013 Wireless Energy Management Systems International Ltd.
+ * Author: Guy Thouret <guythouret@wems.co.uk> (added RS232 DTE Signalling)
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
@@ -21,6 +24,10 @@
 
 #define IMXUART_HAVE_RTSCTS (1<<0)
 #define IMXUART_IRDA        (1<<1)
+#define IMXUART_HAVE_DTRDSR (1<<2)
+#define IMXUART_HAVE_DCD	(1<<3)
+#define IMXUART_HAVE_RI		(1<<4)
+#define IMXUART_IS_DTE		(1<<5)
 
 struct imxuart_platform_data {
 	int (*init)(struct platform_device *pdev);
@@ -30,6 +37,12 @@ struct imxuart_platform_data {
 	unsigned int irda_inv_rx:1;
 	unsigned int irda_inv_tx:1;
 	unsigned short transceiver_delay;
+	int	gpio_dtr;
+	int gpio_dsr;
+	int gpio_ri;
+	int gpio_dcd;
+	int gpio_rts;
+	int gpio_cts;
 };
 
 #endif

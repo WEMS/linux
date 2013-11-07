@@ -9,6 +9,9 @@
  *  Copyright (C) 2009 emlix GmbH
  *  Author: Fabian Godehardt (added IrDA support for iMX)
  *
+ * Copyright (c) 2013 Wireless Energy Management Systems International Ltd.
+ * Author: Guy Thouret <guythouret@wems.co.uk> (added RS232 DTE Signalling)
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -52,6 +55,8 @@
 #include <asm/io.h>
 #include <asm/irq.h>
 #include <linux/platform_data/serial-imx.h>
+#include <mach/iomux-v1.h>
+#include <linux/gpio.h>
 
 /* Register definitions */
 #define URXD0 0x0  /* Receiver Register */
@@ -205,9 +210,19 @@ struct imx_port {
 	unsigned int		irda_inv_rx:1;
 	unsigned int		irda_inv_tx:1;
 	unsigned short		trcv_delay; /* transceiver delay */
+	unsigned int		have_dtrdsr:1;
+	unsigned int		have_dcd:1;
+	unsigned int		have_ri:1;
+	unsigned int		is_dte:1;
 	struct clk		*clk_ipg;
 	struct clk		*clk_per;
 	const struct imx_uart_data *devdata;
+	int dtr;
+	int dsr;
+	int ri;
+	int dcd;
+	int cts;
+	int rts;
 };
 
 struct imx_port_ucrs {
@@ -602,6 +617,80 @@ static irqreturn_t imx_int(int irq, void *dev_id)
 	return IRQ_HANDLED;
 }
 
+static int imx_get_dcd(struct imx_port *port)
+{
+	int res = 0;
+	if (port->dcd) {
+		int gpin  = (port->dcd & GPIO_PIN_MASK);
+		int gport = ((port->dcd & GPIO_PORT_MASK) >> 5);
+		int gpio = ((gport - 1) * 32) + (gpin);
+
+		res = gpio_get_value(gpio);
+	}
+	return res;
+}
+
+static int imx_get_dsr(struct imx_port *port)
+{
+	int res = 0;
+	if (port->dsr) {
+		int gpin  = (port->dsr & GPIO_PIN_MASK);
+		int gport = ((port->dsr & GPIO_PORT_MASK) >> 5);
+		int gpio = ((gport - 1) * 32) + (gpin);
+
+		res = gpio_get_value(gpio);
+	}
+	return res;
+}
+
+static int imx_get_ri(struct imx_port *port)
+{
+	int res = 0;
+	if (port->ri) {
+		int gpin  = (port->ri & GPIO_PIN_MASK);
+		int gport = ((port->ri & GPIO_PORT_MASK) >> 5);
+		int gpio = ((gport - 1) * 32) + (gpin);
+
+		res = gpio_get_value(gpio) ? 0 : 1;
+	}
+	return res;
+}
+
+static int imx_get_cts(struct imx_port *port)
+{
+	int res = 0;
+	if (port->cts) {
+		int gpin  = (port->cts & GPIO_PIN_MASK);
+		int gport = ((port->cts & GPIO_PORT_MASK) >> 5);
+		int gpio = ((gport - 1) * 32) + (gpin);
+
+		gpio_get_value(gpio);
+	}
+	return res;
+}
+
+static void imx_set_dtr(struct imx_port *port, int val)
+{
+	if (port->dtr) {
+		int gpin  = (port->dtr & GPIO_PIN_MASK);
+		int gport = ((port->dtr & GPIO_PORT_MASK) >> 5);
+		int gpio = ((gport - 1) * 32) + (gpin);
+
+		gpio_set_value(gpio, val);
+	}
+}
+
+static void imx_set_rts(struct imx_port *port, int val)
+{
+	if (port->rts) {
+		int gpin  = (port->rts & GPIO_PIN_MASK);
+		int gport = ((port->rts & GPIO_PORT_MASK) >> 5);
+		int gpio = ((gport - 1) * 32) + (gpin);
+
+		gpio_set_value(gpio, val);
+	}
+}
+
 /*
  * Return TIOCSER_TEMT when transmitter is not busy.
  */
@@ -618,13 +707,38 @@ static unsigned int imx_tx_empty(struct uart_port *port)
 static unsigned int imx_get_mctrl(struct uart_port *port)
 {
 	struct imx_port *sport = (struct imx_port *)port;
-	unsigned int tmp = TIOCM_DSR | TIOCM_CAR;
 
-	if (readl(sport->port.membase + USR1) & USR1_RTSS)
-		tmp |= TIOCM_CTS;
+	unsigned int tmp = 0;
 
-	if (readl(sport->port.membase + UCR2) & UCR2_CTS)
-		tmp |= TIOCM_RTS;
+	if (sport->is_dte) {
+		if (sport->have_dcd) {
+			if (imx_get_dcd(sport))
+				tmp |= TIOCM_CD;
+		}
+
+		if (sport->have_rtscts) {
+			if (imx_get_cts(sport))
+				tmp |= TIOCM_CTS;
+		}
+
+		if (sport->have_ri) {
+			if (imx_get_ri(sport))
+				tmp |= TIOCM_RI;
+		}
+
+		if (sport->have_dtrdsr) {
+			if (imx_get_dsr(sport))
+				tmp |= TIOCM_DSR;
+		}
+	} else {
+		unsigned int tmp = TIOCM_DSR | TIOCM_CAR;
+
+		if (readl(sport->port.membase + USR1) & USR1_RTSS)
+			tmp |= TIOCM_CTS;
+
+		if (readl(sport->port.membase + UCR2) & UCR2_CTS)
+			tmp |= TIOCM_RTS;
+	}
 
 	return tmp;
 }
@@ -632,14 +746,31 @@ static unsigned int imx_get_mctrl(struct uart_port *port)
 static void imx_set_mctrl(struct uart_port *port, unsigned int mctrl)
 {
 	struct imx_port *sport = (struct imx_port *)port;
-	unsigned long temp;
 
-	temp = readl(sport->port.membase + UCR2) & ~UCR2_CTS;
+	if (sport->is_dte) {
+		if (sport->have_rtscts) {
+			if (mctrl & TIOCM_RTS)
+				imx_set_rts(sport, 1);
+			else
+				imx_set_rts(sport, 0);
+		}
 
-	if (mctrl & TIOCM_RTS)
-		temp |= UCR2_CTS;
+		if (sport->have_dtrdsr) {
+			if (mctrl & TIOCM_DTR)
+				imx_set_dtr(sport, 1);
+			else
+				imx_set_dtr(sport, 0);
+		}
+	} else {
+		unsigned long temp;
 
-	writel(temp, sport->port.membase + UCR2);
+		temp = readl(sport->port.membase + UCR2) & ~UCR2_CTS;
+
+		if (mctrl & TIOCM_RTS)
+			temp |= UCR2_CTS;
+
+		writel(temp, sport->port.membase + UCR2);
+	}
 }
 
 /*
@@ -801,14 +932,20 @@ static int imx_startup(struct uart_port *port)
 	imx_enable_ms(&sport->port);
 	spin_unlock_irqrestore(&sport->port.lock,flags);
 
+	struct imxuart_platform_data *pdata;
+	pdata = sport->port.dev->platform_data;
+
 	if (USE_IRDA(sport)) {
-		struct imxuart_platform_data *pdata;
-		pdata = sport->port.dev->platform_data;
 		sport->irda_inv_rx = pdata->irda_inv_rx;
 		sport->irda_inv_tx = pdata->irda_inv_tx;
 		sport->trcv_delay = pdata->transceiver_delay;
 		if (pdata->irda_enable)
 			pdata->irda_enable(1);
+	}
+
+
+	if (flags & (IMXUART_IS_DTE | IMXUART_HAVE_DTRDSR)) {
+		imx_set_dtr(sport, 1);
 	}
 
 	return 0;
@@ -870,6 +1007,10 @@ static void imx_shutdown(struct uart_port *port)
 
 	writel(temp, sport->port.membase + UCR1);
 	spin_unlock_irqrestore(&sport->port.lock, flags);
+
+	if (flags & (IMXUART_IS_DTE | IMXUART_HAVE_DTRDSR)) {
+		imx_set_dtr(sport, 0);
+	}
 }
 
 static void
@@ -1458,6 +1599,30 @@ static void serial_imx_probe_pdata(struct imx_port *sport,
 
 	if (pdata->flags & IMXUART_IRDA)
 		sport->use_irda = 1;
+
+	if (pdata->flags & IMXUART_IS_DTE)
+		sport->is_dte = 1;
+
+	if (pdata->flags & (IMXUART_IS_DTE | IMXUART_HAVE_DTRDSR)) {
+		sport->have_dtrdsr = 1;
+		sport->dtr = pdata->gpio_dtr;
+		sport->dsr = pdata->gpio_dsr;
+	}
+
+	if (pdata->flags & (IMXUART_IS_DTE |IMXUART_HAVE_DCD)) {
+		sport->have_dcd = 1;
+		sport->dcd = pdata->gpio_dcd;
+	}
+
+	if (pdata->flags & IMXUART_HAVE_RI) {
+		sport->have_ri = 1;
+		sport->ri = pdata->gpio_ri;
+	}
+
+	if (pdata->flags & (IMXUART_IS_DTE | IMXUART_HAVE_RTSCTS)) {
+		sport->rts = pdata->gpio_rts;
+		sport->cts = pdata->gpio_cts;
+	}
 }
 
 static int serial_imx_probe(struct platform_device *pdev)

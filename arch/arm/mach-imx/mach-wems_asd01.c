@@ -27,17 +27,29 @@
 
 #include "devices-imx21.h"
 
-/* Map Additional IO for RS232 Signalling */
-/* TODO: Need to correctly define some of these as out pins TBC */
+/* Map Additional IO for RS232 Signalling
+ *	TX	->
+ *	RX	<-
+ *	RTS	->
+ *	CTS	<-
+ *	DTR	->
+ *	DSR	<-
+ *	DCD	<-
+ *	RI	<-
+ */
 #define WEMS_ASD01_UART2_DCD	(GPIO_PORTB | GPIO_GPIO | GPIO_IN | 19)
-#define WEMS_ASD01_UART2_RI		PB18_PF_CSI_D6
-#define WEMS_ASD01_UART2_DSR	PB17_PF_CSI_D5
-#define WEMS_ASD01_UART2_DTR	PB14_PF_CSI_D4
+#define WEMS_ASD01_UART2_RI		(GPIO_PORTB | GPIO_GPIO | GPIO_IN | 18)
+#define WEMS_ASD01_UART2_DSR	(GPIO_PORTB | GPIO_GPIO | GPIO_IN | 17)
+#define WEMS_ASD01_UART2_DTR	(GPIO_PORTB | GPIO_GPIO | GPIO_OUT | 14)
+#define WEMS_ASD01_UART2_CTS	(GPIO_PORTE | GPIO_GPIO | GPIO_IN | 3)
+#define WEMS_ASD01_UART2_RTS	(GPIO_PORTE | GPIO_GPIO | GPIO_OUT | 4)
 
-#define WEMS_ASD01_UART3_DCD	PB13_PF_CSI_D3
-#define WEMS_ASD01_UART3_RI		PB12_PF_CSI_D2
-#define WEMS_ASD01_UART3_DSR	PB11_PF_CSI_D1
-#define WEMS_ASD01_UART3_DTR	PB10_PF_CSI_D0
+#define WEMS_ASD01_UART3_DCD	(GPIO_PORTB | GPIO_GPIO | GPIO_IN | 13)
+#define WEMS_ASD01_UART3_RI		(GPIO_PORTB | GPIO_GPIO | GPIO_IN | 12)
+#define WEMS_ASD01_UART3_DSR	(GPIO_PORTB | GPIO_GPIO | GPIO_IN | 11)
+#define WEMS_ASD01_UART3_DTR	(GPIO_PORTB | GPIO_GPIO | GPIO_OUT | 10)
+#define WEMS_ASD01_UART3_CTS	(GPIO_PORTE | GPIO_GPIO | GPIO_IN | 10)
+#define WEMS_ASD01_UART3_RTS	(GPIO_PORTE | GPIO_GPIO | GPIO_OUT | 11)
 
 /* Map Additional IO for SD */
 #define WEMS_ASD01_SD1_VEN		(GPIO_PORTD | GPIO_GPIO | GPIO_OUT | 27)
@@ -98,14 +110,22 @@ static const int wems_asd01_pins[] __initconst = {
 	/* Serial1 - UART2 */
 	PE6_PF_UART2_TXD,
 	PE7_PF_UART2_RXD,
-	PE3_PF_UART2_CTS,
-	PE4_PF_UART2_RTS,
+	WEMS_ASD01_UART2_DCD,
+	WEMS_ASD01_UART2_RI,
+	WEMS_ASD01_UART2_DSR,
+	WEMS_ASD01_UART2_DTR,
+	WEMS_ASD01_UART2_CTS,
+	WEMS_ASD01_UART2_RTS,
 
 	/* Serial2 - UART3 */
 	PE8_PF_UART3_TXD,
 	PE9_PF_UART3_RXD,
-	PE10_PF_UART3_CTS,
-	PE11_PF_UART3_RTS,
+	WEMS_ASD01_UART3_DCD,
+	WEMS_ASD01_UART3_RI,
+	WEMS_ASD01_UART3_DSR,
+	WEMS_ASD01_UART3_DTR,
+	WEMS_ASD01_UART3_CTS,
+	WEMS_ASD01_UART3_RTS,
 
 	/* SD - SD1 */
 	PE18_PF_SD1_D0,
@@ -234,13 +254,29 @@ static struct platform_device *platform_devices[] __initdata = {
 
 
 /*
- * UART2 and UART3 Use RTS/CTS, UART1 does not
+ * UART2 and UART3 Use RS232 DTE, UART1 does not
  */
-static const struct imxuart_platform_data uart_pdata_rts __initconst = {
-	.flags = IMXUART_HAVE_RTSCTS,
+static const struct imxuart_platform_data uart_pdata_uart2 __initconst = {
+	.flags = IMXUART_HAVE_RTSCTS | IMXUART_HAVE_DTRDSR | IMXUART_HAVE_DCD | IMXUART_HAVE_RI | IMXUART_IS_DTE,
+	.gpio_rts = WEMS_ASD01_UART2_RTS,
+	.gpio_cts = WEMS_ASD01_UART2_CTS,
+	.gpio_dtr = WEMS_ASD01_UART2_DTR,
+	.gpio_dsr = WEMS_ASD01_UART2_DSR,
+	.gpio_dcd = WEMS_ASD01_UART2_DCD,
+	.gpio_ri = WEMS_ASD01_UART2_RI,
 };
 
-static const struct imxuart_platform_data uart_pdata_norts __initconst = {
+static const struct imxuart_platform_data uart_pdata_uart3 __initconst = {
+	.flags = IMXUART_HAVE_RTSCTS | IMXUART_HAVE_DTRDSR | IMXUART_HAVE_DCD | IMXUART_HAVE_RI | IMXUART_IS_DTE,
+	.gpio_rts = WEMS_ASD01_UART3_RTS,
+	.gpio_cts = WEMS_ASD01_UART3_CTS,
+	.gpio_dtr = WEMS_ASD01_UART3_DTR,
+	.gpio_dsr = WEMS_ASD01_UART3_DSR,
+	.gpio_dcd = WEMS_ASD01_UART3_DCD,
+	.gpio_ri = WEMS_ASD01_UART3_RI,
+};
+
+static const struct imxuart_platform_data uart_pdata_uart1 __initconst = {
 };
 
 
@@ -321,9 +357,9 @@ static void __init wems_asd01_board_init(void)
 	platform_device_register_full(&wems_asd01_cs8900_devinfo);
 
 	/* Initialise UARTs */
-	imx21_add_imx_uart0(&uart_pdata_norts);
-	imx21_add_imx_uart1(&uart_pdata_rts);
-	imx21_add_imx_uart2(&uart_pdata_rts);
+	imx21_add_imx_uart0(&uart_pdata_uart1);
+	imx21_add_imx_uart1(&uart_pdata_uart2);
+	imx21_add_imx_uart2(&uart_pdata_uart3);
 
 	/* MMC Power Off */
 	gpio_set_value(IMX_GPIO_NR(4, 27), 0);
