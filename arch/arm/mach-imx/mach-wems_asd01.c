@@ -381,6 +381,9 @@ static void __init wems_asd01_board_init(void)
 	/* Initialise RTC */
 	i2c_register_board_info(0, m41t00_i2c_board_info, ARRAY_SIZE(m41t00_i2c_board_info));
 
+	/* Initialise Watchdog */
+	imx21_add_imx2_wdt();
+
 	platform_add_devices(platform_devices, ARRAY_SIZE(platform_devices));
 }
 
