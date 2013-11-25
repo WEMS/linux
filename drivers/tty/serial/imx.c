@@ -621,11 +621,7 @@ static int imx_get_dcd(struct imx_port *port)
 {
 	int res = 0;
 	if (port->dcd) {
-		int gpin  = (port->dcd & GPIO_PIN_MASK);
-		int gport = ((port->dcd & GPIO_PORT_MASK) >> 5);
-		int gpio = ((gport - 1) * 32) + (gpin);
-
-		res = gpio_get_value(gpio);
+		res = gpio_get_value(port->dcd) ? 0 : 1;
 	}
 	return res;
 }
@@ -634,11 +630,7 @@ static int imx_get_dsr(struct imx_port *port)
 {
 	int res = 0;
 	if (port->dsr) {
-		int gpin  = (port->dsr & GPIO_PIN_MASK);
-		int gport = ((port->dsr & GPIO_PORT_MASK) >> 5);
-		int gpio = ((gport - 1) * 32) + (gpin);
-
-		res = gpio_get_value(gpio);
+		res = gpio_get_value(port->dsr) ? 0 : 1;
 	}
 	return res;
 }
@@ -647,11 +639,7 @@ static int imx_get_ri(struct imx_port *port)
 {
 	int res = 0;
 	if (port->ri) {
-		int gpin  = (port->ri & GPIO_PIN_MASK);
-		int gport = ((port->ri & GPIO_PORT_MASK) >> 5);
-		int gpio = ((gport - 1) * 32) + (gpin);
-
-		res = gpio_get_value(gpio) ? 0 : 1;
+		res = gpio_get_value(port->ri) ? 0 : 1;
 	}
 	return res;
 }
@@ -660,11 +648,7 @@ static int imx_get_cts(struct imx_port *port)
 {
 	int res = 0;
 	if (port->cts) {
-		int gpin  = (port->cts & GPIO_PIN_MASK);
-		int gport = ((port->cts & GPIO_PORT_MASK) >> 5);
-		int gpio = ((gport - 1) * 32) + (gpin);
-
-		gpio_get_value(gpio);
+		res = gpio_get_value(port->cts) ? 0 : 1;
 	}
 	return res;
 }
@@ -672,22 +656,16 @@ static int imx_get_cts(struct imx_port *port)
 static void imx_set_dtr(struct imx_port *port, int val)
 {
 	if (port->dtr) {
-		int gpin  = (port->dtr & GPIO_PIN_MASK);
-		int gport = ((port->dtr & GPIO_PORT_MASK) >> 5);
-		int gpio = ((gport - 1) * 32) + (gpin);
-
-		gpio_set_value(gpio, val);
+		val = val ? 0 : 1;
+		gpio_set_value(port->dtr, val);
 	}
 }
 
 static void imx_set_rts(struct imx_port *port, int val)
 {
 	if (port->rts) {
-		int gpin  = (port->rts & GPIO_PIN_MASK);
-		int gport = ((port->rts & GPIO_PORT_MASK) >> 5);
-		int gpio = ((gport - 1) * 32) + (gpin);
-
-		gpio_set_value(gpio, val);
+		val = val ? 0 : 1;
+		gpio_set_value(port->rts, val);
 	}
 }
 
@@ -746,7 +724,6 @@ static unsigned int imx_get_mctrl(struct uart_port *port)
 static void imx_set_mctrl(struct uart_port *port, unsigned int mctrl)
 {
 	struct imx_port *sport = (struct imx_port *)port;
-
 	if (sport->is_dte) {
 		if (sport->have_rtscts) {
 			if (mctrl & TIOCM_RTS)

@@ -258,22 +258,34 @@ static struct platform_device *platform_devices[] __initdata = {
  */
 static const struct imxuart_platform_data uart_pdata_uart2 __initconst = {
 	.flags = IMXUART_HAVE_RTSCTS | IMXUART_HAVE_DTRDSR | IMXUART_HAVE_DCD | IMXUART_HAVE_RI | IMXUART_IS_DTE,
-	.gpio_rts = WEMS_ASD01_UART2_RTS,
+	/*.gpio_rts = WEMS_ASD01_UART2_RTS,
 	.gpio_cts = WEMS_ASD01_UART2_CTS,
 	.gpio_dtr = WEMS_ASD01_UART2_DTR,
 	.gpio_dsr = WEMS_ASD01_UART2_DSR,
 	.gpio_dcd = WEMS_ASD01_UART2_DCD,
-	.gpio_ri = WEMS_ASD01_UART2_RI,
+	.gpio_ri = WEMS_ASD01_UART2_RI,*/
+	.gpio_rts = IMX_GPIO_NR(5,4),
+	.gpio_cts = IMX_GPIO_NR(5,3),
+	.gpio_dtr = IMX_GPIO_NR(2,14),
+	.gpio_dsr = IMX_GPIO_NR(2,17),
+	.gpio_dcd = IMX_GPIO_NR(2,19),
+	.gpio_ri = IMX_GPIO_NR(2,18),
 };
 
 static const struct imxuart_platform_data uart_pdata_uart3 __initconst = {
 	.flags = IMXUART_HAVE_RTSCTS | IMXUART_HAVE_DTRDSR | IMXUART_HAVE_DCD | IMXUART_HAVE_RI | IMXUART_IS_DTE,
-	.gpio_rts = WEMS_ASD01_UART3_RTS,
+	/*.gpio_rts = WEMS_ASD01_UART3_RTS,
 	.gpio_cts = WEMS_ASD01_UART3_CTS,
 	.gpio_dtr = WEMS_ASD01_UART3_DTR,
 	.gpio_dsr = WEMS_ASD01_UART3_DSR,
 	.gpio_dcd = WEMS_ASD01_UART3_DCD,
-	.gpio_ri = WEMS_ASD01_UART3_RI,
+	.gpio_ri = WEMS_ASD01_UART3_RI,*/
+	.gpio_rts = IMX_GPIO_NR(5,11),
+	.gpio_cts = IMX_GPIO_NR(5,10),
+	.gpio_dtr = IMX_GPIO_NR(2,10),
+	.gpio_dsr = IMX_GPIO_NR(2,11),
+	.gpio_dcd = IMX_GPIO_NR(2,13),
+	.gpio_ri = IMX_GPIO_NR(2,12),
 };
 
 static const struct imxuart_platform_data uart_pdata_uart1 __initconst = {
