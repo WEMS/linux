@@ -542,6 +542,7 @@
  */
 #define ATMEL_VID		0x03eb /* Vendor ID */
 #define STK541_PID		0x2109 /* Zigbee Controller */
+#define CUL_PID			0x204b /* busware.de CUL USB */
 
 /*
  * Blackfin gnICE JTAG
