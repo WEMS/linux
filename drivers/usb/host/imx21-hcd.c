@@ -909,7 +909,8 @@ static void schedule_nonisoc_etd(struct imx21 *imx21, struct urb *urb)
 	u8 dir;
 	u8 bufround;
 	u8 datatoggle;
-	u8 interval = 0;
+	/* Default polling interval of 1ms */
+	u8 interval = 1;
 	u8 relpolpos = 0;
 
 	if (etd_num < 0) {
@@ -972,7 +973,8 @@ static void schedule_nonisoc_etd(struct imx21 *imx21, struct urb *urb)
 	etd->len = count;
 
 	if (usb_pipeint(pipe)) {
-		interval = urb->interval;
+		/* Guard to prevent against excessive polling */
+		interval = (urb->interval == 0) ? 1 : urb->interval;
 		relpolpos = (readl(imx21->regs + USBH_FRMNUB) + 1) & 0xff;
 	}
 
